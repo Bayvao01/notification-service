@@ -1,5 +1,7 @@
 package com.notification.service;
 
+import com.notification.entity.Notification;
+import com.notification.repository.NotificationRepository;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -25,36 +27,26 @@ public class EmailServiceImpl implements EmailService{
     @Autowired
     private JavaMailSender javaMailSender;
 
+    @Autowired
+    private NotificationRepository notificationRepository;
+
     @Override
     public void sendEmail(UserInfo user) throws MessagingException, IOException, TemplateException {
+
+        Notification notification = notificationRepository.findById("TEST_EMAIL").get();
+        String templateStr = notification.getTemplate();
+
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage);
-        helper.setSubject("Welcome To SpringHow.com");
+        helper.setSubject(notification.getSubject());
         helper.setTo(user.getEmail());
-        String emailContent = getEmailContent(user);
+        String emailContent = getEmailContent(user, templateStr);
         helper.setText(emailContent, true);
         javaMailSender.send(mimeMessage);
     }
 
-    String getEmailContent(UserInfo user) throws IOException, TemplateException {
+    String getEmailContent(UserInfo user, String templateStr) throws IOException, TemplateException {
         StringWriter stringWriter = new StringWriter();
-
-        String templateStr= "<!doctype html>\n" +
-                "<html lang=\"en\">\n" +
-                "    <head>\n" +
-                "        <meta charset=\"UTF-8\">\n" +
-                "        <meta name=\"viewport\" content=\"width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0\">\n" +
-                "        <meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\">\n" +
-                "        <title>Spring Boot Email using FreeMarker</title>\n" +
-                "    </head>\n" +
-                "    <body>\n" +
-                "        <div style=\"margin-top: 10px\">Greetings, ${user.name}</div>\n" +
-                "        <div>Your username is <b>${user.username}</b></div>\n" +
-                "        <br/>\n" +
-                "        <div> Have a nice day..!</div>\n" +
-                "    </body>\n" +
-                "</html>";
-
 
         Template t = new Template("name", new StringReader(templateStr),
                 this.configuration);
